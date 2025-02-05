@@ -13,17 +13,29 @@ bot = commands.Bot(command_prefix="!", intents=intents)
 
 @bot.event
 async def on_ready():
-    print(f"Le bot est prêt ! Connecté en tant que {bot.user}")
+    print(f"Connecté en tant que {bot.user}")
 
 @bot.event
 async def on_message(message):
+    print(f"Message de {message.author}: {message.content}")
+
     if message.author == bot.user:
         return
 
     if bot.user.mentioned_in(message):
-        print(f"{message.author} me parle !")
+        message.content = message.content.replace(f"<@{bot.user.id}>", "")
+        message.content = message.content.strip()
 
-    print(f"Message de {message.author}: {message.content}")
+        if message.content.startswith("dis à") or message.content.startswith("dis"):
+            if message.content.startswith("dis à"):
+                message.content = message.content.replace("dis à", "")
+            else:
+                message.content = message.content.replace("dis", "")
+
+            message.content = message.content.strip()
+
+            await message.delete()
+            await message.channel.send(message.content)
 
     await bot.process_commands(message)
 
