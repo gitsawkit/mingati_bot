@@ -162,11 +162,11 @@ async def check_free_games():
 
     for game in games:
         message = []
-        message.append(f"Nouveau jeu **gratuit** sur **{game["platform"]}** ! 🤑")
-        message.append(f"**{game["title"]}**")
+        message.append(f"Nouveau jeu **gratuit** sur **{game['platform']}** ! 🤑")
+        message.append(f"**{game['title']}**")
         if game["expired_date"] != None:
-            message.append(f"\n_Offre limitée jusqu'au **{game["expired_date"]}** !_")
-        message.append(f"\n{game["link"]}")
+            message.append(f"\n_Offre limitée jusqu'au **{game['expired_date']}** !_")
+        message.append(f"\n{game['link']}")
 
         message = "\n".join(message)
         await channel.send(message)
