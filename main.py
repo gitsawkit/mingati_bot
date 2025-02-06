@@ -52,15 +52,15 @@ async def on_member_join(member):
     welcome_channel: discord.TextChannel = bot.get_channel(1049796965334011945)
 
     messages = [
-        f"Bienvenue {member.display_name} ! 😬",
-        f"Est-ce un oiseau ? Un avion ?! Mais non, c'est {member.display_name} !",
-        f"Saint pétard ti, vla {member.display_name} ! On est foutus...",
-        f"Si on m'avait dit que je verrai {member.display_name} un jour... 😏",
-        f"{member.display_name} vient d'entrer dans l'arène ! Espérons qu'il survive 🤞",
-        f"Oh non... Pas encore un {member.display_name}... On en avait pas déjà un en stock ? 😆",
-        f"La légende disait vrai... {member.display_name} existe vraiment 👀",
-        f"{member.display_name} a été invoqué avec succès !",
-        f"On pensait être tranquilles... et voilà que {member.display_name} arrive 😬",
+        f"Bienvenue @{member.display_name} ! 😬",
+        f"Est-ce un oiseau ? Un avion ?! Mais non, c'est @{member.display_name} !",
+        f"Saint pétard ti, vla @{member.display_name} ! On est foutus...",
+        f"Si on m'avait dit que je verrai @{member.display_name} un jour... 😏",
+        f"@{member.display_name} vient d'entrer dans l'arène ! Espérons qu'il survive 🤞",
+        f"Oh non... Pas encore un @{member.display_name}... On en avait pas déjà un en stock ? 😆",
+        f"La légende disait vrai... @{member.display_name} existe vraiment 👀",
+        f"@{member.display_name} a été invoqué avec succès !",
+        f"On pensait être tranquilles... et voilà que @{member.display_name} arrive 😬",
     ]
 
     await welcome_channel.send(random.choice(messages))
