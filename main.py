@@ -1,4 +1,4 @@
-import discord, os, random
+import discord, json, os, random
 from discord.ext import commands, tasks
 from lib import steam
 
@@ -12,10 +12,14 @@ intents.voice_states = True
 
 bot = commands.Bot(command_prefix="!", intents=intents)
 
+SENT_GAMES_FILE = os.path.join("data", ".sent_games.json")
+MAX_GAMES_STORE = 30
+
 
 @bot.event
 async def on_ready():
     print(f"✅ Connecté en tant que {bot.user}")
+    print(SENT_GAMES_FILE)
 
     if not check_free_games.is_running():
         check_free_games.start()
@@ -125,15 +129,33 @@ async def create_channel(member):
         )
         await member.move_to(new_channel)
 
-#TODO: Check si le jeu est déjà envoyé (JSON: Efface automatiquement tout les 30 lignes)
+def load_sent_games():
+    if os.path.exists(SENT_GAMES_FILE):
+        with open(SENT_GAMES_FILE, "r", encoding="utf-8") as file:
+            return json.load(file)
+    return []
+
+def save_sent_games(sent_games):
+    while len(sent_games) > MAX_GAMES_STORE:
+        sent_games.pop(0)
+
+    with open(SENT_GAMES_FILE, "w", encoding="utf-8") as file:
+        json.dump(sent_games, file, indent=4, ensure_ascii=False)
+
 @tasks.loop(hours=12)
 async def check_free_games():
-    #channel: discord.TextChannel = bot.get_channel(977236274974978109) #TODO: Réactiver la ligne pour la PROD
-    channel: discord.TextChannel = bot.get_channel(1336403452988751902)
+    channel: discord.TextChannel = bot.get_channel(977236274974978109)
     games = steam.get_free_games()
-    message = []
+
+    sent_games = load_sent_games()
+    new_games = [game for game in games if game["link"] not in sent_games]
+
+    if not new_games:
+        print("🛑 Aucun nouveau jeu à envoyer")
+        return
 
     for game in games:
+        message = []
         message.append(f"Nouveau jeu **gratuit** sur **{game["platform"]}** ! 🤑")
         message.append(f"**{game["title"]}**")
         if game["expired_date"] != None:
@@ -142,7 +164,11 @@ async def check_free_games():
 
         message = "\n".join(message)
         await channel.send(message)
-    print(f"📩 {len(games)} nouveaux jeux envoyé sur {channel.name}")
+
+    sent_games.extend(game["link"] for game in new_games)
+    save_sent_games(sent_games)
+
+    print(f"📩 {len(new_games)} nouveaux jeux envoyé sur {channel.name}")
 
 
 if DISCORD_TOKEN:
