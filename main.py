@@ -14,11 +14,11 @@ bot = commands.Bot(command_prefix="!", intents=intents)
 
 @bot.event
 async def on_ready():
-    print(f"Connecté en tant que {bot.user}")
+    print(f"✅ Connecté en tant que {bot.user}")
 
 @bot.event
 async def on_message(message):
-    print(f"Message de {message.author}: {message.content}")
+    print(f"💬 Message de {message.author}: {message.content}")
 
     if message.author == bot.user:
         return
@@ -62,8 +62,10 @@ async def on_member_join(member):
 async def on_voice_state_update(member, before, after):
     if after.channel and after.channel.name == "➕・CRÉER UN SALON" and after.channel.category.name.startswith(("↽🎮・Gaming", "↽💬・Forum")):
         await create_channel(member)
+        print(f"👌 Salon de {member.display_name} créé avec succès")
     if before.channel and before.channel.name.startswith(f"{member.display_name}'s Palace") and len(before.channel.members) == 0:
             await before.channel.delete()
+            print(f"🗑️ Salon de {member.display_name} à été supprimé pour cause d'inativité")
 
 async def create_channel(member):
     guild = member.guild
@@ -124,4 +126,5 @@ async def create_channel(member):
 if DISCORD_TOKEN:
     bot.run(DISCORD_TOKEN)
 else:
-    print("ERROR : DISCORD_SECRET_CLIENT - Le token du bot Discord est manquant.")
+    print("❌ ERROR : Le token Discord est manquant !")
+    exit(1)
