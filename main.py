@@ -128,20 +128,20 @@ async def create_channel(member):
 
 @tasks.loop(hours=12)
 async def check_free_games():
-    #channel: discord.TextChannel = bot.get_channel(977236274974978109)
+    #channel: discord.TextChannel = bot.get_channel(977236274974978109) #TODO: Réactiver la ligne pour la PROD
     channel: discord.TextChannel = bot.get_channel(1336403452988751902)
     games = steam.get_free_games()
+    message = []
 
     for game in games:
-        embed = discord.Embed(
-            title=game["title"], url=game["link"],
-            description=f"🤑 Nouveau jeu gratuit sur {game["platform"]} !\n{game["link"]}"
-        )
-        embed.set_image(url=game["image"])
+        message.append(f"Nouveau jeu **gratuit** sur **{game["platform"]}** ! 🤑")
+        message.append(f"**{game["title"]}**")
         if game["expired_date"] != None:
-            embed.set_footer(f"Offre limitée jusqu'au {game["expired_date"]} !")
+            message.append(f"\n_Offre limitée jusqu'au **{game["expired_date"]}** !_")
+        message.append(f"\n{game["link"]}")
 
-        await channel.send(embed=embed)
+        message = "\n".join(message)
+        await channel.send(message)
     print(f"✅ {len(games)} nouveaux jeux envoyé sur {channel.name}")
 
 
