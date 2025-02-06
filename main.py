@@ -126,6 +126,7 @@ async def create_channel(member):
         )
         await member.move_to(new_channel)
 
+#TODO: Check si le jeu est déjà envoyé (JSON: Efface automatiquement tout les 30 lignes)
 @tasks.loop(hours=12)
 async def check_free_games():
     #channel: discord.TextChannel = bot.get_channel(977236274974978109) #TODO: Réactiver la ligne pour la PROD
