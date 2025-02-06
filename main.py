@@ -17,6 +17,9 @@ bot = commands.Bot(command_prefix="!", intents=intents)
 async def on_ready():
     print(f"✅ Connecté en tant que {bot.user}")
 
+    if not check_free_games.is_running():
+        check_free_games.start()
+
 @bot.event
 async def on_message(message):
     print(f"💬 Message de {message.author}: {message.content}")
@@ -125,18 +128,20 @@ async def create_channel(member):
 
 @tasks.loop(hours=12)
 async def check_free_games():
-    channel: discord.TextChannel = bot.get_channel(977236274974978109)
+    #channel: discord.TextChannel = bot.get_channel(977236274974978109)
+    channel: discord.TextChannel = bot.get_channel(1336403452988751902)
     games = steam.get_free_games()
 
     for game in games:
         embed = discord.Embed(
             title=game["title"], url=game["link"],
-            description=f"🤑 Nouveau jeu gratuit sur {game["platform"]} !"
+            description=f"🤑 Nouveau jeu gratuit sur {game["platform"]} !\n{game["link"]}"
         )
-        if game["expired_date"]:
+        embed.set_image(url=game["image"])
+        if game["expired_date"] != None:
             embed.set_footer(f"Offre limitée jusqu'au {game["expired_date"]} !")
 
-        await channel.send(embed)
+        await channel.send(embed=embed)
     print(f"✅ {len(games)} nouveaux jeux envoyé sur {channel.name}")
 
 
