@@ -1,5 +1,6 @@
 import discord, os, random
-from discord.ext import commands
+from discord.ext import commands, tasks
+from lib import steam
 
 
 DISCORD_TOKEN = os.getenv("DISCORD_SECRET_CLIENT")
@@ -121,6 +122,22 @@ async def create_channel(member):
             overwrites=overwrites,
         )
         await member.move_to(new_channel)
+
+@tasks.loop(hours=12)
+async def check_free_games():
+    channel: discord.TextChannel = bot.get_channel(977236274974978109)
+    games = steam.get_free_games()
+
+    for game in games:
+        embed = discord.Embed(
+            title=game["title"], url=game["link"],
+            description=f"🤑 Nouveau jeu gratuit sur {game["platform"]} !"
+        )
+        if game["expired_date"]:
+            embed.set_footer(f"Offre limitée jusqu'au {game["expired_date"]} !")
+
+        await channel.send(embed)
+    print(f"✅ {len(games)} nouveaux jeux envoyé sur {channel.name}")
 
 
 if DISCORD_TOKEN:
