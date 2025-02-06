@@ -23,5 +23,5 @@ def get_free_games():
             }
             games.append(game)
 
-    print(f"✅ Recherche terminé. {len(games)} jeux trouvés :\n {games}")
+    print(f"👮‍♂️ Recherche terminé, {len(games)} jeux trouvés.")
     return games

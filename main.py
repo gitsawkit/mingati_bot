@@ -22,7 +22,7 @@ async def on_ready():
 
 @bot.event
 async def on_message(message):
-    print(f"💬 Message de {message.author}: {message.content}")
+    print(f"💬 Message de {message.author}:\n{message.content}\n------")
 
     if message.author == bot.user:
         return
@@ -66,7 +66,7 @@ async def on_member_join(member):
 async def on_voice_state_update(member, before, after):
     if after.channel and after.channel.name == "➕・CRÉER UN SALON" and after.channel.category.name.startswith(("↽🎮・Gaming", "↽💬・Forum")):
         await create_channel(member)
-        print(f"👌 Salon de {member.display_name} créé avec succès")
+        print(f"✅ Salon de {member.display_name} créé avec succès")
     if before.channel and before.channel.name.startswith(f"{member.display_name}'s Palace") and len(before.channel.members) == 0:
             await before.channel.delete()
             print(f"🗑️ Salon de {member.display_name} à été supprimé pour cause d'inativité")
@@ -143,7 +143,7 @@ async def check_free_games():
 
         message = "\n".join(message)
         await channel.send(message)
-    print(f"✅ {len(games)} nouveaux jeux envoyé sur {channel.name}")
+    print(f"📩 {len(games)} nouveaux jeux envoyé sur {channel.name}")
 
 
 if DISCORD_TOKEN:
