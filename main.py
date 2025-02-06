@@ -46,7 +46,7 @@ async def on_message(message):
 
 @bot.event
 async def on_member_join(member):
-    welcome_channel: discord.TextChannel = bot.get_channel(933379075995758603)
+    welcome_channel: discord.TextChannel = bot.get_channel(1049796965334011945)
 
     messages = [
         f"Bienvenue {member.display_name} ! 😬",
@@ -100,7 +100,6 @@ async def create_channel(member):
             add_reactions = True,
             use_external_emojis = True,
             use_external_stickers = True,
-            ## USE SON EXTERNE
             mention_everyone = True,
             manage_messages = True,
             read_message_history = True,
