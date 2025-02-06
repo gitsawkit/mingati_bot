@@ -1,4 +1,4 @@
-import discord, json, os, random
+import asyncio, discord, json, os, random
 from discord.ext import commands, tasks
 from lib import steam
 
@@ -19,7 +19,6 @@ MAX_GAMES_STORE = 30
 @bot.event
 async def on_ready():
     print(f"✅ Connecté en tant que {bot.user}")
-    print(SENT_GAMES_FILE)
 
     if not check_free_games.is_running():
         check_free_games.start()
@@ -72,8 +71,8 @@ async def on_voice_state_update(member, before, after):
         await create_channel(member)
         print(f"✅ Salon de {member.display_name} créé avec succès")
     if before.channel and before.channel.name.startswith(f"{member.display_name}'s Palace") and len(before.channel.members) == 0:
-            await before.channel.delete()
-            print(f"🗑️ Salon de {member.display_name} à été supprimé pour cause d'inativité")
+        await before.channel.delete()
+        print(f"🗑️ Salon de {member.display_name} à été supprimé pour cause d'inativité")
 
 async def create_channel(member):
     guild = member.guild
@@ -130,9 +129,15 @@ async def create_channel(member):
         await member.move_to(new_channel)
 
 def load_sent_games():
-    if os.path.exists(SENT_GAMES_FILE):
-        with open(SENT_GAMES_FILE, "r", encoding="utf-8") as file:
-            return json.load(file)
+    if not os.path.exists(SENT_GAMES_FILE):
+        save_sent_games()
+
+    with open(SENT_GAMES_FILE, "r", encoding="utf-8") as file:
+        content = file.read().strip()
+        if not content:
+            return []
+        return content
+
     return []
 
 def save_sent_games(sent_games):
@@ -144,7 +149,8 @@ def save_sent_games(sent_games):
 
 @tasks.loop(hours=12)
 async def check_free_games():
-    channel: discord.TextChannel = bot.get_channel(977236274974978109)
+    # DEV : 1336403452988751902    PROD : 977236274974978109
+    channel: discord.TextChannel = bot.get_channel(1336403452988751902)
     games = steam.get_free_games()
 
     sent_games = load_sent_games()
