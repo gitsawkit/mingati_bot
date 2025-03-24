@@ -70,7 +70,7 @@ async def on_voice_state_update(member, before, after):
     if after.channel and after.channel.name == "➕・CRÉER UN SALON" and after.channel.category.name.startswith(("↽🎮・Gaming", "↽💬・Forum")):
         await create_channel(member)
         print(f"✅ Salon de {member.display_name} créé avec succès")
-    if before.channel and before.channel.name.startswith(f"{member.display_name}'s Palace") and len(before.channel.members) == 0:
+    if before.channel and before.channel.name.endswith("'s Palace") and len(before.channel.members) == 0:
         await before.channel.delete()
         print(f"🗑️ Salon de {member.display_name} à été supprimé pour cause d'inativité")
 
