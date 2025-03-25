@@ -1,6 +1,6 @@
 import discord, json, os, random
 from discord.ext import commands, tasks
-from lib import steam
+from lib import steam, gog
 
 
 DISCORD_TOKEN = os.getenv("DISCORD_SECRET_CLIENT")
@@ -152,6 +152,7 @@ async def check_free_games():
     # DEV : 1336403452988751902    PROD : 977236274974978109
     channel: discord.TextChannel = bot.get_channel(977236274974978109)
     games = steam.get_free_games()
+    games += gog.get_free_games()
 
     sent_games = load_sent_games()
     new_games = [game for game in games if game["link"] not in sent_games]
