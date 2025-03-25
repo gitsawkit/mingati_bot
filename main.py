@@ -136,7 +136,7 @@ def load_sent_games():
         content = file.read().strip()
         if not content:
             return []
-        return content
+        return json.loads(content)
 
     return []
 
@@ -161,7 +161,7 @@ async def check_free_games():
         print("🛑 Aucun nouveau jeu à envoyer")
         return
 
-    for game in games:
+    for game in new_games:
         message = []
         message.append(f"Nouveau jeu **gratuit** sur **{game['platform']}** ! 🤑")
         message.append(f"**{game['title']}**")
