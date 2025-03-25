@@ -12,13 +12,11 @@ def get_free_games():
     print("🔎 Recherche de jeux gratuit sur Steam...")
     for result in soup.find_all("a", class_="search_result_row"):
         title_tag = result.find("span", class_="title")
-        image_tag = result.find("img")
-        if title_tag and image_tag:
+        if title_tag:
             game = {
                 "platform": "Steam",
                 "title": title_tag.text,
                 "link": result["href"],
-                "image": image_tag["src"],
                 "expired_date": None
             }
             games.append(game)
