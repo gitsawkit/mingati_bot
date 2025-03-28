@@ -1,6 +1,7 @@
 import discord, json, os, random
+from datetime import datetime
 from discord.ext import commands, tasks
-from lib import steam, gog
+from lib import steam, gog, epic
 
 
 DISCORD_TOKEN = os.getenv("DISCORD_SECRET_CLIENT")
@@ -22,6 +23,7 @@ async def on_ready():
 
     if not check_free_games.is_running():
         check_free_games.start()
+
 
 @bot.event
 async def on_message(message):
@@ -47,6 +49,7 @@ async def on_message(message):
 
     await bot.process_commands(message)
 
+
 @bot.event
 async def on_member_join(member):
     welcome_channel: discord.TextChannel = bot.get_channel(1049796965334011945)
@@ -65,57 +68,67 @@ async def on_member_join(member):
 
     await welcome_channel.send(random.choice(messages))
 
+
 @bot.event
 async def on_voice_state_update(member, before, after):
-    if after.channel and after.channel.name == "➕・CRÉER UN SALON" and after.channel.category.name.startswith(("↽🎮・Gaming", "↽💬・Forum")):
+    if (
+        after.channel
+        and after.channel.name == "➕・CRÉER UN SALON"
+        and after.channel.category.name.startswith(("↽🎮・Gaming", "↽💬・Forum"))
+    ):
         await create_channel(member)
         print(f"✅ Salon de {member.display_name} créé avec succès")
-    if before.channel and before.channel.name.endswith("'s Palace") and len(before.channel.members) == 0:
+    if (
+        before.channel
+        and before.channel.name.endswith("'s Palace")
+        and len(before.channel.members) == 0
+    ):
         await before.channel.delete()
         print(f"🗑️ Salon de {member.display_name} à été supprimé pour cause d'inativité")
+
 
 async def create_channel(member):
     guild = member.guild
     overwrites = {
         member: discord.PermissionOverwrite(
             # General Permissions
-            view_channel = True,
-            manage_channels = True,
-            manage_permissions = True,
-            manage_webhooks = True,
+            view_channel=True,
+            manage_channels=True,
+            manage_permissions=True,
+            manage_webhooks=True,
             # Members Permissions
-            create_instant_invite = True,
+            create_instant_invite=True,
             # Voice Channels Permissions
-            connect = True,
-            speak = True,
-            stream = True,
-            use_soundboard = True,
-            use_external_sounds = True,
-            use_voice_activation = True,
-            priority_speaker = True,
-            mute_members = True,
-            deafen_members = True,
-            move_members = True,
+            connect=True,
+            speak=True,
+            stream=True,
+            use_soundboard=True,
+            use_external_sounds=True,
+            use_voice_activation=True,
+            priority_speaker=True,
+            mute_members=True,
+            deafen_members=True,
+            move_members=True,
             # Chat Voice Channels Permissions
-            send_messages = True,
-            embed_links = True,
-            attach_files = True,
-            add_reactions = True,
-            use_external_emojis = True,
-            use_external_stickers = True,
-            mention_everyone = True,
-            manage_messages = True,
-            read_message_history = True,
-            send_tts_messages = True,
-            send_voice_messages = True,
-            create_polls = True,
+            send_messages=True,
+            embed_links=True,
+            attach_files=True,
+            add_reactions=True,
+            use_external_emojis=True,
+            use_external_stickers=True,
+            mention_everyone=True,
+            manage_messages=True,
+            read_message_history=True,
+            send_tts_messages=True,
+            send_voice_messages=True,
+            create_polls=True,
             # Events Permissions
-            create_events = True,
-            manage_events = True,
+            create_events=True,
+            manage_events=True,
             # Applications Permissions
-            use_application_commands = True,
-            use_embedded_activities = True,
-            use_external_apps = True,
+            use_application_commands=True,
+            use_embedded_activities=True,
+            use_external_apps=True,
         )
     }
 
@@ -127,6 +140,7 @@ async def create_channel(member):
             overwrites=overwrites,
         )
         await member.move_to(new_channel)
+
 
 def load_sent_games():
     if not os.path.exists(SENT_GAMES_FILE):
@@ -140,6 +154,7 @@ def load_sent_games():
 
     return []
 
+
 def save_sent_games(sent_games):
     while len(sent_games) > MAX_GAMES_STORE:
         sent_games.pop(0)
@@ -147,12 +162,14 @@ def save_sent_games(sent_games):
     with open(SENT_GAMES_FILE, "w", encoding="utf-8") as file:
         json.dump(sent_games, file, indent=4, ensure_ascii=False)
 
+
 @tasks.loop(hours=12)
 async def check_free_games():
     # DEV : 1336403452988751902    PROD : 977236274974978109
     channel: discord.TextChannel = bot.get_channel(977236274974978109)
     games = steam.get_free_games()
     games += gog.get_free_games()
+    games += epic.get_free_games()
 
     sent_games = load_sent_games()
     new_games = [game for game in games if game["link"] not in sent_games]
@@ -166,7 +183,14 @@ async def check_free_games():
         message.append(f"Nouveau jeu **gratuit** sur **{game['platform']}** ! 🤑")
         message.append(f"**{game['title']}**")
         if game["expired_date"] != None:
-            message.append(f"\n_Offre limitée jusqu'au **{game['expired_date']}** !_")
+            try:
+                dt = datetime.strptime(game["expired_date"], "%Y-%m-%dT%H:%M:%S.%fZ")
+                formatted_date = dt.strftime("%d/%m/%Y %H:%M:%S")
+                message.append(f"\n_Offre limitée jusqu'au **{formatted_date}** !_")
+            except ValueError:
+                message.append(
+                    f"\n_Offre limitée jusqu'au **{game['expired_date']}** !_"
+                )
         message.append(f"\n{game['link']}")
 
         message = "\n".join(message)
