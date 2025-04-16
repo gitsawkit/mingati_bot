@@ -1,2 +1,4 @@
 lib/__pycache__/*
+debug/__pycache__/*
 data/.sent_games.json
+.env
