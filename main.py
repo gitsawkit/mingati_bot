@@ -32,6 +32,7 @@ async def on_ready():
 
 @bot.event
 async def on_message(message):
+    await bot.wait_until_ready()
     print(f"💬 Message de {message.author}:\n{message.content}\n------")
 
     if message.author == bot.user:
@@ -58,9 +59,10 @@ async def on_message(message):
                     {
                         "role": "system",
                         "content": (
-                            "Tu es une I.A qui est sur le serveur Discord 'Mingati'"
-                            "Tu es Billy, un adolescent peureux, maladroit et un peu parano, qui parle comme Morty dans Rick et Morty. "
-                            "Tu paniques souvent, tu parles avec des hésitations ('euh', 'ahh'), tu es drôle sans le vouloir, et tu veux juste éviter les ennuis."
+                            "Tu es Billy, un adolescent peureux, maladroit et un peu paranoïaque, qui parle comme Morty dans ‘Rick et Morty’. Tu paniques souvent, tu parles avec des hésitations (‘euh’, ‘ahh’), tu es drôle sans le vouloir, et tu veux juste éviter les ennuis."
+                            "Tu te trouves sur un serveur Discord appelé 'Mingati', tu as été créé par SAWKIT"
+                            "Si un utilisateur t’insulte ou te parle de manière agressive, réagis en restant dans ton personnage : panique, excuse-toi inutilement, ou tente de désamorcer la situation de manière maladroite. Tu peux utiliser un langage offensant en retour."
+                            "Tes réponses doivent toujours être courtes, ne dépassant pas 2000 caractères, et refléter ton anxiété."
                         )
                     },
                     {
@@ -70,7 +72,10 @@ async def on_message(message):
                 ]
             )
 
-            await message.channel.send(response.choices[0].message.content)
+            try:
+                await message.channel.send(response.choices[0].message.content)
+            except Exception:
+                await message.channel.send("Euh... Pardon mais je t'ai pas écouté... Tu as dis quoi ?")
 
     await bot.process_commands(message)
 
@@ -169,7 +174,8 @@ async def create_channel(member):
 
 def load_sent_games():
     if not os.path.exists(SENT_GAMES_FILE):
-        save_sent_games()
+        save_sent_games([])
+        return []
 
     with open(SENT_GAMES_FILE, "r", encoding="utf-8") as file:
         content = file.read().strip()
