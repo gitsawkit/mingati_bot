@@ -197,7 +197,7 @@ def save_sent_games(sent_games):
 @tasks.loop(hours=12)
 async def check_free_games():
     # DEV : 1336403452988751902    PROD : 977236274974978109
-    channel: discord.TextChannel = bot.get_channel(1336403452988751902)
+    channel: discord.TextChannel = bot.get_channel(977236274974978109)
     games = steam.get_free_games()
     games += gog.get_free_games()
     games += epic.get_free_games()
