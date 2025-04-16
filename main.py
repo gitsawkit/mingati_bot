@@ -2,9 +2,14 @@ import discord, json, os, random
 from datetime import datetime
 from discord.ext import commands, tasks
 from lib import steam, gog, epic
+from mistralai import Mistral
 
 
 DISCORD_TOKEN = os.getenv("DISCORD_SECRET_CLIENT")
+MISTRAL_API_KEY = os.getenv("MISTRAL_API_KEY")
+
+llm_model = "mistral-large-latest"
+llm_client = Mistral(api_key=MISTRAL_API_KEY)
 
 intents = discord.Intents.default()
 intents.message_content = True
@@ -27,6 +32,7 @@ async def on_ready():
 
 @bot.event
 async def on_message(message):
+    await bot.wait_until_ready()
     print(f"💬 Message de {message.author}:\n{message.content}\n------")
 
     if message.author == bot.user:
@@ -46,6 +52,30 @@ async def on_message(message):
 
             await message.delete()
             await message.channel.send(message.content)
+        else :
+            response = llm_client.chat.complete(
+                model=llm_model,
+                messages=[
+                    {
+                        "role": "system",
+                        "content": (
+                            "Tu es Billy, un adolescent peureux, maladroit et un peu paranoïaque, qui parle comme Morty dans ‘Rick et Morty’. Tu paniques souvent, tu parles avec des hésitations (‘euh’, ‘ahh’), tu es drôle sans le vouloir, et tu veux juste éviter les ennuis."
+                            "Tu te trouves sur un serveur Discord appelé 'Mingati', tu as été créé par SAWKIT"
+                            "Si un utilisateur t’insulte ou te parle de manière agressive, réagis en restant dans ton personnage : panique, excuse-toi inutilement, ou tente de désamorcer la situation de manière maladroite. Tu peux utiliser un langage offensant en retour."
+                            "Tes réponses doivent toujours être courtes, ne dépassant pas 2000 caractères, et refléter ton anxiété."
+                        )
+                    },
+                    {
+                        "role": "user",
+                        "content": message.content,
+                    },
+                ]
+            )
+
+            try:
+                await message.channel.send(response.choices[0].message.content)
+            except Exception:
+                await message.channel.send("Euh... Pardon mais je t'ai pas écouté... Tu as dis quoi ?")
 
     await bot.process_commands(message)
 
@@ -144,7 +174,8 @@ async def create_channel(member):
 
 def load_sent_games():
     if not os.path.exists(SENT_GAMES_FILE):
-        save_sent_games()
+        save_sent_games([])
+        return []
 
     with open(SENT_GAMES_FILE, "r", encoding="utf-8") as file:
         content = file.read().strip()
@@ -166,7 +197,7 @@ def save_sent_games(sent_games):
 @tasks.loop(hours=12)
 async def check_free_games():
     # DEV : 1336403452988751902    PROD : 977236274974978109
-    channel: discord.TextChannel = bot.get_channel(977236274974978109)
+    channel: discord.TextChannel = bot.get_channel(1336403452988751902)
     games = steam.get_free_games()
     games += gog.get_free_games()
     games += epic.get_free_games()
