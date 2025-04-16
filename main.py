@@ -2,9 +2,14 @@ import discord, json, os, random
 from datetime import datetime
 from discord.ext import commands, tasks
 from lib import steam, gog, epic
+from mistralai import Mistral
 
 
 DISCORD_TOKEN = os.getenv("DISCORD_SECRET_CLIENT")
+MISTRAL_API_KEY = os.getenv("MISTRAL_API_KEY")
+
+llm_model = "mistral-large-latest"
+llm_client = Mistral(api_key=MISTRAL_API_KEY)
 
 intents = discord.Intents.default()
 intents.message_content = True
@@ -46,6 +51,26 @@ async def on_message(message):
 
             await message.delete()
             await message.channel.send(message.content)
+        else :
+            response = llm_client.chat.complete(
+                model=llm_model,
+                messages=[
+                    {
+                        "role": "system",
+                        "content": (
+                            "Tu es une I.A qui est sur le serveur Discord 'Mingati'"
+                            "Tu es Billy, un adolescent peureux, maladroit et un peu parano, qui parle comme Morty dans Rick et Morty. "
+                            "Tu paniques souvent, tu parles avec des hésitations ('euh', 'ahh'), tu es drôle sans le vouloir, et tu veux juste éviter les ennuis."
+                        )
+                    },
+                    {
+                        "role": "user",
+                        "content": message.content,
+                    },
+                ]
+            )
+
+            await message.channel.send(response.choices[0].message.content)
 
     await bot.process_commands(message)
 
