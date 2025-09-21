@@ -1,5 +1,8 @@
-lib/__pycache__/*
-debug/__pycache__/*
-.vscode/*
-data/.sent_games.json
 .env
+.venv/*
+.vscode/*
+__pycache__/*
+data/.sent_games.json
+debug/__pycache__/*
+lib/__pycache__/*
+tests/__pycache__/*
