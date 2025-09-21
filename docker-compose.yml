@@ -1,9 +1,22 @@
 services:
-  mingati_bot:
+  mingati_bot_prod:
     build: .
-    container_name: mingati_bot
+    container_name: mingati_bot_prod
     env_file:
       - .env
+    environment:
+      - ENV=prod
     command: python main.py
     restart: unless-stopped
+    tty: true
+
+  mingati_bot_dev:
+    build: .
+    container_name: mingati_bot_dev
+    env_file:
+      - .env
+    environment:
+      - ENV=dev
+    command: python main.py
+    restart: "no"
     tty: true

@@ -5,6 +5,7 @@ from lib import steam, gog, epic
 from mistralai import Mistral
 
 
+ENV = os.getenv("ENV", "prod").lower()
 DISCORD_TOKEN = os.getenv("DISCORD_SECRET_CLIENT")
 MISTRAL_API_KEY = os.getenv("MISTRAL_API_KEY")
 
@@ -196,8 +197,8 @@ def save_sent_games(sent_games):
 
 @tasks.loop(hours=12)
 async def check_free_games():
-    # DEV : 1336403452988751902    PROD : 977236274974978109
-    channel: discord.TextChannel = bot.get_channel(977236274974978109)
+    channel_id = 1336403452988751902 if ENV == "dev" else 977236274974978109
+    channel: discord.TextChannel = bot.get_channel(channel_id)
     games = steam.get_free_games()
     games += gog.get_free_games()
     games += epic.get_free_games()
