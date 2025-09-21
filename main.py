@@ -19,7 +19,7 @@ intents.voice_states = True
 
 bot = commands.Bot(command_prefix="!", intents=intents)
 
-SENT_GAMES_FILE = os.path.join("data", ".sent_games.json")
+SENT_GAMES_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", ".sent_games.json")
 MAX_GAMES_STORE = 30
 
 
@@ -174,25 +174,36 @@ async def create_channel(member):
 
 
 def load_sent_games():
-    if not os.path.exists(SENT_GAMES_FILE):
-        save_sent_games([])
-        return []
-
-    with open(SENT_GAMES_FILE, "r", encoding="utf-8") as file:
-        content = file.read().strip()
-        if not content:
+    try:
+        if not os.path.exists(SENT_GAMES_FILE):
+            print(f"⚠️ Fichier {SENT_GAMES_FILE} non trouvé, création...")
+            os.makedirs(os.path.dirname(SENT_GAMES_FILE), exist_ok=True)
+            save_sent_games([])
             return []
-        return json.loads(content)
 
-    return []
+        with open(SENT_GAMES_FILE, "r", encoding="utf-8") as file:
+            content = file.read().strip()
+            if not content:
+                print("⚠️ Fichier vide")
+                return []
+            data = json.loads(content)
+            print(f"📖 {len(data)} jeux chargés depuis {SENT_GAMES_FILE}")
+            return data
+    except Exception as e:
+        print(f"❌ Erreur lors du chargement de {SENT_GAMES_FILE}: {str(e)}")
+        return []
 
 
 def save_sent_games(sent_games):
-    while len(sent_games) > MAX_GAMES_STORE:
-        sent_games.pop(0)
+    try:
+        while len(sent_games) > MAX_GAMES_STORE:
+            sent_games.pop(0)
 
-    with open(SENT_GAMES_FILE, "w", encoding="utf-8") as file:
-        json.dump(sent_games, file, indent=4, ensure_ascii=False)
+        with open(SENT_GAMES_FILE, "w", encoding="utf-8") as file:
+            json.dump(sent_games, file, indent=4, ensure_ascii=False)
+        print(f"💾 {len(sent_games)} jeux sauvegardés dans {SENT_GAMES_FILE}")
+    except Exception as e:
+        print(f"❌ Erreur lors de la sauvegarde dans {SENT_GAMES_FILE}: {str(e)}")
 
 
 @tasks.loop(hours=12)

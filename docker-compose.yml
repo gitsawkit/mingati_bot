@@ -8,6 +8,8 @@ services:
       - ENV=prod
     command: python main.py
     restart: unless-stopped
+    volumes:
+      - ./data:/app/data
     tty: true
 
   mingati_bot_dev:
@@ -19,4 +21,6 @@ services:
       - ENV=dev
     command: python main.py
     restart: "no"
+    volumes:
+      - ./data:/app/data
     tty: true
