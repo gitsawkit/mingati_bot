@@ -4,6 +4,6 @@ services:
     container_name: mingati_bot
     env_file:
       - .env
-    entrypoint: ["/bin/bash"]
+    command: python main.py
     restart: unless-stopped
     tty: true
