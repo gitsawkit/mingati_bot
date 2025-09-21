@@ -1,9 +1,15 @@
-import discord, json, os, random
+import discord, json, os, random, logging
 from datetime import datetime
 from discord.ext import commands, tasks
 from lib import steam, gog, epic
 from mistralai import Mistral
 
+
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s',
+    datefmt='%Y-%m-%d %H:%M:%S'
+)
 
 ENV = os.getenv("ENV", "prod").lower()
 DISCORD_TOKEN = os.getenv("DISCORD_SECRET_CLIENT")
@@ -25,7 +31,7 @@ MAX_GAMES_STORE = 30
 
 @bot.event
 async def on_ready():
-    print(f"✅ Connecté en tant que {bot.user}")
+    logging.info(f"✅ Connecté en tant que {bot.user}")
 
     if not check_free_games.is_running():
         check_free_games.start()
@@ -34,7 +40,7 @@ async def on_ready():
 @bot.event
 async def on_message(message):
     await bot.wait_until_ready()
-    print(f"💬 Message de {message.author}:\n{message.content}\n------")
+    logging.info(f"💬 Message de {message.author}:\n{message.content}\n------")
 
     if message.author == bot.user:
         return
@@ -108,14 +114,14 @@ async def on_voice_state_update(member, before, after):
         and after.channel.category.name.startswith(("↽🎮・Gaming", "↽💬・Forum"))
     ):
         await create_channel(member)
-        print(f"✅ Salon de {member.display_name} créé avec succès")
+        logging.info(f"✅ Salon de {member.display_name} créé avec succès")
     if (
         before.channel
         and before.channel.name.endswith("'s Palace")
         and len(before.channel.members) == 0
     ):
         await before.channel.delete()
-        print(f"🗑️ Salon de {member.display_name} à été supprimé pour cause d'inativité")
+        logging.info(f"🗑️ Salon de {member.display_name} à été supprimé pour cause d'inativité")
 
 
 async def create_channel(member):
@@ -176,7 +182,7 @@ async def create_channel(member):
 def load_sent_games():
     try:
         if not os.path.exists(SENT_GAMES_FILE):
-            print(f"⚠️ Fichier {SENT_GAMES_FILE} non trouvé, création...")
+            logging.warning(f"⚠️ Fichier {SENT_GAMES_FILE} non trouvé, création...")
             os.makedirs(os.path.dirname(SENT_GAMES_FILE), exist_ok=True)
             save_sent_games([])
             return []
@@ -184,13 +190,13 @@ def load_sent_games():
         with open(SENT_GAMES_FILE, "r", encoding="utf-8") as file:
             content = file.read().strip()
             if not content:
-                print("⚠️ Fichier vide")
+                logging.warning("⚠️ Fichier vide")
                 return []
             data = json.loads(content)
-            print(f"📖 {len(data)} jeux chargés depuis {SENT_GAMES_FILE}")
+            logging.info(f"📖 {len(data)} jeux chargés depuis {SENT_GAMES_FILE}")
             return data
     except Exception as e:
-        print(f"❌ Erreur lors du chargement de {SENT_GAMES_FILE}: {str(e)}")
+        logging.error(f"❌ Erreur lors du chargement de {SENT_GAMES_FILE}: {str(e)}", exc_info=True)
         return []
 
 
@@ -201,11 +207,9 @@ def save_sent_games(sent_games):
 
         with open(SENT_GAMES_FILE, "w", encoding="utf-8") as file:
             json.dump(sent_games, file, indent=4, ensure_ascii=False)
-        print(f"💾 {len(sent_games)} jeux sauvegardés dans {SENT_GAMES_FILE}")
+            logging.info(f"💾 {len(sent_games)} jeux sauvegardés dans {SENT_GAMES_FILE}")
     except Exception as e:
-        print(f"❌ Erreur lors de la sauvegarde dans {SENT_GAMES_FILE}: {str(e)}")
-
-
+        logging.error(f"❌ Erreur lors de la sauvegarde dans {SENT_GAMES_FILE}: {str(e)}", exc_info=True)
 @tasks.loop(hours=12)
 async def check_free_games():
     channel_id = 1336403452988751902 if ENV == "dev" else 977236274974978109
@@ -218,7 +222,7 @@ async def check_free_games():
     new_games = [game for game in games if game["link"] not in sent_games]
 
     if not new_games:
-        print("🛑 Aucun nouveau jeu à envoyer")
+        logging.info("🛑 Aucun nouveau jeu à envoyer")
         return
 
     for game in new_games:
@@ -242,11 +246,11 @@ async def check_free_games():
     sent_games.extend(game["link"] for game in new_games)
     save_sent_games(sent_games)
 
-    print(f"📩 {len(new_games)} nouveaux jeux envoyé sur {channel.name}")
+    logging.info(f"📩 {len(new_games)} nouveaux jeux envoyé sur {channel.name}")
 
 
 if DISCORD_TOKEN:
     bot.run(DISCORD_TOKEN)
 else:
-    print("❌ ERROR : Le token Discord est manquant !")
+    logging.critical("❌ ERROR : Le token Discord est manquant !")
     exit(1)
