@@ -175,6 +175,7 @@ async def create_channel(member):
             name=f"{member.display_name}'s Palace",
             category=category,
             overwrites=overwrites,
+            bitrate=128000,
         )
         await member.move_to(new_channel)
 
