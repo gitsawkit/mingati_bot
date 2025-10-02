@@ -139,7 +139,7 @@ async def on_voice_state_update(member, before, after):
     if (
         after.channel
         and after.channel.name == "➕・CRÉER UN SALON"
-        and after.channel.category.name.startswith(("↽🎮・Gaming", "↽💬・Forum"))
+        and after.channel.category.name.startswith(("↽ 🎮・Gaming", "↽ 💬・Forum"))
     ):
         await create_channel(member)
         logging.info(f"✅ Salon de {member.display_name} créé avec succès")
