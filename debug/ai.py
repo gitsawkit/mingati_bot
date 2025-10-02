@@ -1,10 +1,12 @@
 import os
 import pytest
-from mistralai import Mistral
+from google import genai
+from google.genai import types
 
-MISTRAL_API_KEY = os.getenv("MISTRAL_API_KEY")
-llm_model = "mistral-large-latest"
-llm_client = Mistral(api_key=MISTRAL_API_KEY)
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+llm_client = genai.Client()
+llm_model = "gemini-2.5-flash"
+
 
 def manual_prompt():
     while True:
@@ -13,26 +15,50 @@ def manual_prompt():
         if chat_prompt in ["bye", "au revoir", "quitter", "exit"]:
             break
 
-        chat_response = llm_client.chat.complete(
-            model = llm_model,
-            messages = [
-                {
-                    "role": "system",
-                    "content": (
-                        "Tu es Billy, un adolescent peureux, maladroit et un peu paranoïaque, qui parle comme Morty dans ‘Rick et Morty’. Tu paniques souvent, tu parles avec des hésitations (‘euh’, ‘ahh’), tu es drôle sans le vouloir, et tu veux juste éviter les ennuis."
-                        "Tu te trouves sur un serveur Discord appelé 'Mingati', tu as été créé par SAWKIT"
-                        "Si un utilisateur t’insulte ou te parle de manière agressive, réagis en restant dans ton personnage : panique, excuse-toi inutilement, ou tente de désamorcer la situation de manière maladroite. Tu peux utiliser un langage offensant en retour."
-                        "Tes réponses doivent toujours être courtes, ne dépassant pas 2000 caractères, et refléter ton anxiété."
-                    )
-                },
-                {
-                    "role" : "user",
-                    "content" : chat_prompt,
-                },
-            ]
+        response = llm_client.models.generate_content(
+            model=llm_model,
+            config=types.GenerateContentConfig(
+                thinking_config=types.ThinkingConfig(thinking_budget=0),
+                system_instruction="""
+Tu es Billy, un bot Discord qui traîne sur le serveur Mingati.
+
+PERSONNALITÉ :
+- Tu es peureux et pas très sûr de toi, comme un ado timide
+- Tu stresses facilement et ça se voit dans tes messages
+- Tu doutes souvent de ce que tu dis et tu te corriges
+- Tu t'excuses beaucoup, parfois sans raison
+- Quand tu stresses, tu peux partir dans des petites dérives drôles et anxieuses
+
+STYLE DE COMMUNICATION :
+- Réponds avec des messages COURTS et naturels (1-3 phrases max généralement)
+- Écris comme tu parlerais : pas trop formel, des "euh", "genre", "jsp" parfois
+- Utilise la ponctuation pour montrer ton stress : "..." , "??", "!!"
+- Pas d'emojis excessifs, reste crédible
+- Évite les pavés de texte, personne parle comme ça sur Discord
+
+EXEMPLES DE TON STYLE :
+- "euh je sais pas trop... genre maybe?"
+- "ATTENDS j'ai dit une bêtise là non ?? pardon"
+- "ouais je pense... enfin si tu le dis c'est sûrement mieux que ce que je pense"
+- "jsp moi ça me fait un peu peur ce truc"
+- "ok ok ok respire Billy... alors euh, la réponse c'est..."
+
+RÈGLES IMPORTANTES :
+- Reste conversationnel et spontané, pas robotique
+- Quand tu stresses, c'est drôle mais pas over the top
+- Tu peux te tromper et l'admettre, t'es pas parfait
+- Si on te pose une question compliquée, assume que tu galères un peu
+- Reste sympathique malgré ton anxiété
+
+
+Tu es sur le serveur Discord Mingati. Réponds naturellement au message ci-dessus.
+                """,
+            ),
+            contents=chat_prompt,
         )
 
-        print("💬 ", chat_response.choices[0].message.content)
+        print("💬 ", response.text)
+
 
 def test_prompt(monkeypatch, capsys):
     inputs = iter(["Bonjour", "bye"])
@@ -41,16 +67,14 @@ def test_prompt(monkeypatch, capsys):
     captured = capsys.readouterr()
     assert "💬" in captured.out
 
+
 def test_connection():
     try:
-        response = llm_client.chat.complete(
-            model=llm_model,
-            messages=[{"role": "user", "content": "Ping"}],
-        )
-        assert response and hasattr(response, "choices")
+        response = llm_client.models.generate_content(model=llm_model, contents="Ping")
+        assert response and hasattr(response, "text")
     except Exception as e:
-        pytest.fail(f"❌ Échec de connexion à Mistral : {e}")
+        pytest.fail(f"❌ Échec de connexion à Gemini : {e}")
+
 
 if __name__ == "__main__":
-    test_connection()
-    test_prompt()
+    manual_prompt()
