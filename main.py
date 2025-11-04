@@ -141,8 +141,7 @@ async def on_voice_state_update(member, before, after):
         and after.channel.name == "➕・CRÉER UN SALON"
         and after.channel.category.name.startswith(("↽ 🎮・Gaming", "↽ 💬・Forum"))
     ):
-        await create_channel(member)
-        logging.info(f"✅ Salon de {member.display_name} créé avec succès")
+        await create_channel(member, 96000) #128kbps avec Boost, 96kbps par défaut
     if (
         before.channel
         and before.channel.name.endswith("'s Palace")
@@ -150,11 +149,11 @@ async def on_voice_state_update(member, before, after):
     ):
         await before.channel.delete()
         logging.info(
-            f"🗑️ Salon de {member.display_name} à été supprimé pour cause d'inativité"
+            f"🗑️ Salon {before.channel.name} à été supprimé pour cause d'inativité"
         )
 
 
-async def create_channel(member):
+async def create_channel(member, bitrate):
     guild = member.guild
     overwrites = {
         member: discord.PermissionOverwrite(
@@ -201,12 +200,43 @@ async def create_channel(member):
 
     category = member.voice.channel.category
     if category:
-        new_channel = await guild.create_voice_channel(
-            name=f"{member.display_name}'s Palace",
-            category=category,
-            overwrites=overwrites,
-            bitrate=128000,
-        )
+        name = f"{member.display_name}'s Palace"
+
+        try:
+            logging.info(f"🔊 Création du salon vocal pour {member.display_name}...")
+            new_channel = await guild.create_voice_channel(
+                name=name,
+                category=category,
+                overwrites=overwrites,
+                bitrate=bitrate,
+            )
+            logging.info(f"✅ Salon vocal {name} créé avec succès")
+        except discord.errors.HTTPException as e:
+            err = str(e)
+            if "bitrate" in err or "int32 value should be less than or equal to 96000" in err:
+                logging.warning(
+                    "⚠️ Bitrate trop élevé, réessaie avec 96kbps: %s", err
+                )
+                try:
+                    new_channel = await guild.create_voice_channel(
+                        name=name,
+                        category=category,
+                        overwrites=overwrites,
+                        bitrate=96000,
+                    )
+                    logging.info(f"✅ Salon vocal {name} créé avec succès")
+                except Exception as e2:
+                    logging.error(
+                        f"❌ Échec de la création du salon avec bitrate 96kbps: {e2}",
+                        exc_info=True,
+                    )
+                    return
+            else:
+                logging.error(
+                    f"❌ Erreur lors de la création du salon: {err}", exc_info=True
+                )
+                return
+
         await member.move_to(new_channel)
 
 
