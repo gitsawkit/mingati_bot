@@ -43,7 +43,7 @@ async def on_ready():
 @bot.event
 async def on_message(message):
     await bot.wait_until_ready()
-    logging.info(f"💬 Message de {message.author}:\n{message.content}\n------")
+    logging.debug(f"💬 Message de {message.author}:\n{message.content}\n------")
 
     if message.author == bot.user:
         return
@@ -254,7 +254,7 @@ def load_sent_games():
                 logging.warning("⚠️ Fichier vide")
                 return []
             data = json.loads(content)
-            logging.info(f"📖 {len(data)} jeux chargés depuis {SENT_GAMES_FILE}")
+            logging.debug(f"📖 {len(data)} jeux chargés depuis {SENT_GAMES_FILE}")
             return data
     except Exception as e:
         logging.error(
@@ -271,7 +271,7 @@ def save_sent_games(sent_games):
 
         with open(SENT_GAMES_FILE, "w", encoding="utf-8") as file:
             json.dump(sent_games, file, indent=4, ensure_ascii=False)
-            logging.info(
+            logging.debug(
                 f"💾 {len(sent_games)} jeux sauvegardés dans {SENT_GAMES_FILE}"
             )
     except Exception as e:
@@ -302,7 +302,7 @@ async def check_free_games():
         message.append(f"**{game['title']}**")
         if game["expired_date"] != None:
             try:
-                dt = datetime.strptime(game["expired_date"], "%Y-%m-%dT%H:%M:%S.%fZ")
+                dt = datetime.strptime(game["expired_date"], "%Y-%m-%dT%H:%M:%SZ")
                 formatted_date = dt.strftime("%d/%m/%Y %H:%M:%S")
                 message.append(f"\n_Offre limitée jusqu'au **{formatted_date}** !_")
             except ValueError:
