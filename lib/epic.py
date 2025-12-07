@@ -51,6 +51,7 @@ def get_free_games():
 
                             game_data = {
                                 "platform": "Epic Games",
+                                "icon": "<:epic_games:1447060063553585152>",
                                 "title": title,
                                 "link": link,
                                 "expired_date": end_date

@@ -298,16 +298,16 @@ async def check_free_games():
 
     for game in new_games:
         message = []
-        message.append(f"Nouveau jeu **gratuit** sur **{game['platform']}** ! 🤑")
-        message.append(f"**{game['title']}**")
+        message.append(f"{game['icon']} Nouveau jeu **gratuit** sur **{game['platform']}** !")
+        message.append(f"➡️ **{game['title']}**")
         if game["expired_date"] != None:
             try:
                 dt = datetime.strptime(game["expired_date"], "%Y-%m-%dT%H:%M:%SZ")
                 formatted_date = dt.strftime("%d/%m/%Y %H:%M:%S")
-                message.append(f"\n_Offre limitée jusqu'au **{formatted_date}** !_")
+                message.append(f"\n⏳ _Offre limitée jusqu'au **{formatted_date}** !_")
             except ValueError:
                 message.append(
-                    f"\n_Offre limitée jusqu'au **{game['expired_date']}** !_"
+                    f"\n⏳ _Offre limitée jusqu'au **{game['expired_date']}** !_"
                 )
         message.append(f"\n{game['link']}")
 

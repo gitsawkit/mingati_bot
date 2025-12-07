@@ -16,6 +16,7 @@ def get_free_games():
         if title_tag:
             game = {
                 "platform": "GoG",
+                "icon": "<:gog:1447059257211224155>",
                 "title": title_tag["title"],
                 "link": result["href"],
                 "expired_date": None

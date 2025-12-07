@@ -16,6 +16,7 @@ def get_free_games():
         if title_tag:
             game = {
                 "platform": "Steam",
+                "icon": "<:steam:1447055808893419583>",
                 "title": title_tag.text,
                 "link": result["href"],
                 "expired_date": None
