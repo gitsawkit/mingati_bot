@@ -1,4 +1,4 @@
-import discord, json, os, random, logging
+import asyncio, discord, json, os, random, logging
 from datetime import datetime
 from discord.ext import commands, tasks
 from lib import steam, gog, epic
@@ -63,7 +63,10 @@ async def on_message(message):
             await message.delete()
             await message.channel.send(message.content)
         else:
-            response = llm_client.models.generate_content(
+            loop = asyncio.get_running_loop()
+            response = await loop.run_in_executor(
+                None,
+                lambda: llm_client.models.generate_content(
                 model=llm_model,
                 config=types.GenerateContentConfig(
                     thinking_config=types.ThinkingConfig(thinking_budget=0),
@@ -103,6 +106,7 @@ Tu es sur le serveur Discord Mingati. Réponds naturellement au message ci-dessu
                 """,
                 ),
                 contents=message.content,
+                )
             )
 
             try:
@@ -284,13 +288,30 @@ def save_sent_games(sent_games):
 @tasks.loop(hours=12)
 async def check_free_games():
     channel_id = 1336403452988751902 if ENV == "dev" else 977236274974978109
-    channel: discord.TextChannel = bot.get_channel(channel_id)
-    games = steam.get_free_games()
-    games += gog.get_free_games()
-    games += epic.get_free_games()
+
+    try:
+        channel: discord.TextChannel = bot.get_channel(channel_id)
+        if not channel:
+            channel: discord.TextChannel = await bot.fetch_channel(channel_id)
+    except Exception as e:
+        logging.error(f"❌ Erreur lors de la récupération du salon {channel_id}: {str(e)}", exc_info=True)
+        return
+
+    loop = asyncio.get_running_loop()
+    try:
+        raw_games = await asyncio.gather(
+            loop.run_in_executor(None, steam.get_free_games),
+            loop.run_in_executor(None, gog.get_free_games),
+            loop.run_in_executor(None, epic.get_free_games),
+        )
+        games = [game for platforms in raw_games for game in platforms]
+    except Exception as e:
+        logging.error(f"❌ Erreur lors de la récupération des jeux gratuits: {str(e)}", exc_info=True)
+        return
 
     sent_games = load_sent_games()
-    new_games = [game for game in games if game["link"] not in sent_games]
+    sent_games_set = set(sent_games)
+    new_games = [game for game in games if game["link"] not in sent_games_set]
 
     if not new_games:
         logging.info("🛑 Aucun nouveau jeu à envoyer")
@@ -300,7 +321,7 @@ async def check_free_games():
         message = []
         message.append(f"{game['icon']} Nouveau jeu **gratuit** sur **{game['platform']}** !")
         message.append(f"➡️ **{game['title']}**")
-        if game["expired_date"] != None:
+        if game.get("expired_date"):
             try:
                 dt = datetime.strptime(game["expired_date"], "%Y-%m-%dT%H:%M:%SZ")
                 formatted_date = dt.strftime("%d/%m/%Y %H:%M:%S")
@@ -310,12 +331,16 @@ async def check_free_games():
                     f"\n⏳ _Offre limitée jusqu'au **{game['expired_date']}** !_"
                 )
         message.append(f"\n{game['link']}")
-
         message = "\n".join(message)
-        await channel.send(message)
 
-    sent_games.extend(game["link"] for game in new_games)
-    save_sent_games(sent_games)
+        try:
+            await channel.send(message)
+
+            sent_games.append(game["link"])
+            save_sent_games(sent_games)
+            await asyncio.sleep(1)
+        except Exception as e:
+            logging.error(f"❌ Erreur lors de l'envoi du message des jeux gratuits: {str(e)}", exc_info=True)
 
     logging.info(f"📩 {len(new_games)} nouveaux jeux envoyé sur {channel.name}")
 
