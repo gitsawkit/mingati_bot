@@ -10,7 +10,7 @@ def get_free_games():
     soup = BeautifulSoup(response.text, "html.parser")
 
     games = []
-    logging.info("🔎 Recherche de jeux gratuit sur Steam...")
+    logging.info("🔎 Recherche de jeux gratuits sur Steam...")
     for result in soup.find_all("a", class_="search_result_row"):
         title_tag = result.find("span", class_="title")
         if title_tag:
@@ -24,5 +24,5 @@ def get_free_games():
             games.append(game)
             logging.debug(f"➕ Ajouté : {game['title']} ({game['link']})")
 
-    logging.info(f"👮 Recherche terminé, {len(games)} jeux trouvés.")
+    logging.info(f"👮 Recherche terminée, {len(games)} jeux trouvés.")
     return games

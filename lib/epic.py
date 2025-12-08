@@ -1,10 +1,10 @@
 import epicstore_api
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 
 api = epicstore_api.EpicGamesStoreAPI()
-current_time = (datetime.utcnow() + timedelta(hours=1)).isoformat() + 'Z'
+current_time = (datetime.now(timezone.utc).replace(tzinfo=None) + timedelta(hours=1)).isoformat() + 'Z'
 
 def get_free_games():
     games = []
