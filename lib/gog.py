@@ -10,19 +10,19 @@ def get_free_games():
     soup = BeautifulSoup(response.text, "html.parser")
 
     games = []
-    logging.info("🔎 Recherche de jeux gratuit sur GoG...")
+    logging.info("🔎 Recherche de jeux gratuits sur GoG...")
     for result in soup.find_all("a", class_="product-tile product-tile--grid"):
         title_tag = result.find("div", class_="product-tile__title ng-star-inserted")
         if title_tag:
             game = {
                 "platform": "GoG",
                 "icon": "<:gog:1447059257211224155>",
-                "title": title_tag["title"],
+                "title": title_tag.get("title", "Titre inconnu"),
                 "link": result["href"],
                 "expired_date": None
             }
             games.append(game)
             logging.debug(f"➕ Ajouté : {game['title']} ({game['link']})")
 
-    logging.info(f"👮 Recherche terminé, {len(games)} jeux trouvés.")
+    logging.info(f"👮 Recherche terminée, {len(games)} jeux trouvés.")
     return games
